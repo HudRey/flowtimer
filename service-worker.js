@@ -1,4 +1,4 @@
-const CACHE_NAME = 'flotimer-v1';
+const CACHE_NAME = 'flotimer-v1'; // Change v1 → v2 → v3, etc.
 const urlsToCache = [
   './',
   './index.html',
@@ -71,4 +71,5 @@ self.addEventListener('fetch', event => {
         });
       })
   );
+
 });
