@@ -11,6 +11,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 <meta name="apple-mobile-web-app-title" content="FloTimer" />
 <link rel="manifest" href="/site.webmanifest" />
+ <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <title>Multi-Interval Timer</title>
 <style>
   * {
@@ -20,28 +21,28 @@
   }
 
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    font-family: 'Nunito', sans-serif;
     text-align: center;
     padding: 20px;
     min-height: 100vh;
     background-color: #f8f8f8;
-    background-image: url('https://drive.google.com/uc?export=view&id=1oIANxunjYBmg8DSGQJtr5SqK9BF_FkS7');
-    background-size: contain;
+    background-image: url('https://i.imgur.com/VhtsL9V.jpeg');
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     background-attachment: fixed;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
   }
 
   .overlay {
-    background-color: rgba(255,255,255,0.9);
-    padding: 30px;
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-    max-width: 400px;
-    width: 100%;
+    background-color: rgba(255,255,255,0.2);
+    padding: 3vh 4vw;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    width: 90vw;
+    max-width: 600px;
   }
 
   h1 {
@@ -53,8 +54,8 @@
   .inputs {
     display: flex;
     justify-content: center;
-    gap: 20px;
-    margin-bottom: 20px;
+    gap: 3vw;
+    margin-bottom: 2vh;
     flex-wrap: wrap;
   }
 
@@ -65,18 +66,19 @@
   }
 
   label { 
-    font-weight: 600; 
-    font-size: 0.9rem;
+    font-weight: bold; 
+    font-size: clamp(14px, 2.5vw, 20px);
     color: #555;
   }
   
   input { 
-    width: 80px; 
+    width: clamp(60px, 10vw, 90px); 
     text-align: center; 
-    padding: 8px; 
-    border-radius: 8px; 
-    border: 2px solid #ddd;
-    font-size: 1rem;
+    padding: 1vh 0.5vw; 
+    border-radius: 6px; 
+    border: 1px solid #bbb;
+    font-size: clamp(14px, 2.5vw, 18px);
+  }
     transition: border-color 0.3s;
   }
 
@@ -87,12 +89,11 @@
 
   .timerBarContainer { 
     width: 100%; 
-    height: 24px; 
+    height: clamp(20px, 3vh, 40px); 
     background: #e0e0e0; 
-    border-radius: 12px; 
+    border-radius: 10px; 
     overflow: hidden; 
-    margin: 8px 0;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    margin: 1vh 0;
   }
   
   .timerBar { 
@@ -106,7 +107,7 @@
   #status { 
     margin: 15px 0; 
     font-weight: 600; 
-    font-size: 1.1rem;
+    font-size: clamp(16px, 3vw, 24px);
     color: #333;
     min-height: 30px;
   }
@@ -125,7 +126,7 @@
     border-radius: 8px; 
     cursor: pointer; 
     font-weight: 600;
-    font-size: 1rem;
+    font-size: clamp(14px, 2.5vw, 18px);
     transition: transform 0.2s, box-shadow 0.2s;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   }
@@ -231,9 +232,9 @@
   <div id="status">Ready</div>
 
   <div class="buttonGroup">
-    <button id="startBtn">▶️ Start</button>
-    <button id="pauseBtn">⏸️ Pause</button>
-    <button id="resetBtn">🔄 Reset</button>
+    <button id="startBtn">Start</button>
+    <button id="pauseBtn">Pause</button>
+    <button id="resetBtn">Reset</button>
   </div>
 </div>
 
@@ -305,13 +306,19 @@ function playBeep(){
   if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
   const oscillator=audioCtx.createOscillator();
   const gainNode=audioCtx.createGain();
+  
   oscillator.type='sine';
-  oscillator.frequency.setValueAtTime(660,audioCtx.currentTime);
-  gainNode.gain.setValueAtTime(0.3,audioCtx.currentTime);
+  oscillator.frequency.setValueAtTime(440,audioCtx.currentTime);
   oscillator.connect(gainNode);
   gainNode.connect(audioCtx.destination);
+  
+  // Fade in and out for smoother sound
+  gainNode.gain.setValueAtTime(0,audioCtx.currentTime);
+  gainNode.gain.linearRampToValueAtTime(0.3,audioCtx.currentTime+0.05);
+  gainNode.gain.linearRampToValueAtTime(0,audioCtx.currentTime+0.4);
+  
   oscillator.start();
-  oscillator.stop(audioCtx.currentTime+0.25);
+  oscillator.stop(audioCtx.currentTime+0.4);
 }
 
 function getBarColor(percent){
@@ -325,7 +332,6 @@ function startTimer(){
   if(!isRunning){
     totalIntervals=parseInt(intervalCountInput.value);
     currentInterval=currentInterval||0;
-    timeLeft=timeLeft||parseInt(intervalTimeInput.value);
     isRunning=true;
     status.textContent=`Interval ${currentInterval+1} of ${totalIntervals}`;
     runCountdown();
@@ -333,49 +339,63 @@ function startTimer(){
 }
 
 function runCountdown(){
-  timer=setInterval(()=>{
-    if(timeLeft>0){
-      timeLeft--;
-      const currentBar=document.getElementById('bar'+currentInterval);
-      const percent=(timeLeft/parseInt(intervalTimeInput.value))*100;
-      currentBar.style.width=percent+'%';
-      currentBar.style.backgroundColor=getBarColor(percent);
-    }else{
+  const intervalDuration = parseInt(intervalTimeInput.value);
+  const startTime = Date.now();
+  
+  function updateBar() {
+    if (!isRunning) return; // Stop if paused
+    
+    const now = Date.now();
+    const totalElapsed = (now - startTime) / 1000;
+    const smoothTimeLeft = Math.max(0, intervalDuration - totalElapsed);
+    const percent = (smoothTimeLeft / intervalDuration) * 100;
+    
+    const currentBar = document.getElementById('bar' + currentInterval);
+    currentBar.style.width = percent + '%';
+    currentBar.style.backgroundColor = getBarColor(percent);
+    
+    // Update status with seconds remaining
+    const secondsLeft = Math.ceil(smoothTimeLeft);
+    status.textContent = `Interval ${currentInterval + 1} of ${totalIntervals} - ${secondsLeft}s`;
+    
+    // Check if we've truly hit 0
+    if (smoothTimeLeft <= 0) {
       playBeep();
-      const currentBar=document.getElementById('bar'+currentInterval);
-      currentBar.style.width='0%';
-      currentBar.style.backgroundColor=getBarColor(0);
-      if(currentInterval<totalIntervals-1){
-        currentInterval++;
-        timeLeft=parseInt(intervalTimeInput.value);
-        status.textContent=`Interval ${currentInterval+1} of ${totalIntervals}`;
-      }else{
-        clearInterval(timer);
-        isRunning=false;
-        status.textContent='✅ Done!';
-        
-        // Vibrate on completion (if supported)
-        if ('vibrate' in navigator) {
-          navigator.vibrate([200, 100, 200]);
-        }
+      currentBar.style.width = '0%';
+      currentBar.style.backgroundColor = getBarColor(0);
+      
+      if (currentInterval < totalIntervals - 1) {
+        // Add a small delay before starting next interval
+        setTimeout(() => {
+          if (isRunning) { // Check if still running after delay
+            currentInterval++;
+            timeLeft = intervalDuration;
+            status.textContent = `Interval ${currentInterval + 1} of ${totalIntervals}`;
+            runCountdown(); // Start new countdown with fresh timer
+          }
+        }, 650); // 500ms delay between intervals
+      } else {
+        isRunning = false;
+        status.textContent = 'Done!';
       }
+    } else {
+      requestAnimationFrame(updateBar);
     }
-  },1000);
+  }
+  
+  requestAnimationFrame(updateBar);
 }
 
 function pauseTimer(){
   if(isRunning){
-    clearInterval(timer);
     isRunning=false;
-    status.textContent+=' ⏸️ (Paused)';
+    status.textContent+=' (Paused)';
   }
 }
 
 function resetTimer(){
-  clearInterval(timer);
   isRunning=false;
   currentInterval=0;
-  timeLeft=null;
   createBars();
   status.textContent='Ready';
 }
@@ -397,4 +417,5 @@ window.onload=createBars;
 </script>
 
 </body>
+
 </html>
